@@ -1,0 +1,833 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TPI Pro API",
+    "description": "API to manage TPI Pro entities",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "ClientRecord",
+      "description": "API to manage ClientRecord TPI Pro entities"
+    },
+    {
+      "name": "ClientShare",
+      "description": "API to manage ClientShare TPI Pro entities"
+    },
+    {
+      "name": "CoachClientConnection",
+      "description": "API to manage CoachClientConnection TPI Pro entities"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:8081"
+    }
+  ],
+  "paths": {
+    "/api/clientrecords": {
+      "post": {
+        "tags": ["ClientRecord"],
+        "summary": "Create a new ClientRecord",
+        "description": "Create a new ClientRecord by a pro for a client.\n\nIf want to send the client an invitation email, send in sendInvite=true as a querystring param.  If the email address is also sent through, the email will be sent.\n\nReturns Newly created ClientRecord on success (201 - Created).\n\nError status codes: 401(Unauthorized)-User not logged in.\n\n403(Forbidden)-If authenticated user is not certified or on track.\n\n400(BadRequest)-Invalid params or ModelState.",
+        "parameters": [
+          {
+            "name": "sendInvite",
+            "in": "query",
+            "description": "Send an invitation email to the client",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "ClientRecord to be created. ClientRecordDTO. input.Id must be set to an empty guid",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientRecordInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "ClientRecord created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest-Invalid params or ModelState"
+          },
+          "401": {
+            "description": "Unauthorized-User not logged in"
+          },
+          "403": {
+            "description": "Forbidden-Authenticated user is not certified or on track"
+          }
+        }
+      }
+    },
+    "/api/clientrecords/{clientrecordid}": {
+      "put": {
+        "tags": ["ClientRecord"],
+        "summary": "Update a ClientRecord",
+        "description": "Update an existing ClientRecord by ClientRecord id\n\nreturns updated ClientRecord on success (200).\n\nError status codes: 401(Unauthorized)-User not logged in.\n\n403(Forbidden)-If authenticated user is not certified or on track.\n\n400(BadRequest)-Invalid params or ModelState.\n\n404(NotFound)-If record is not found or owned by authenticated user.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ClientRecord.Id value that must match the incoming input.Id value.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "ClientRecordDTO object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientRecordInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ClientRecord updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BadRequest-Invalid params or ModelState"
+          },
+
+          "401": {
+            "description": "Unauthorized-User not logged in"
+          },
+          "403": {
+            "description": "Forbidden-Authenticated user is not certified or on track"
+          },
+          "404": {
+            "description": "NotFound-Record is not found or owned by authenticated user"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["ClientRecord"],
+        "summary": "Delete a ClientRecord",
+        "description": "Delete a ClientRecord by its ClientRecord id.\n\nWill delete (if can - has no associated ScreenResults, etc.) or archive the ClientRecord with the incoming id.\n\nReturns 204(NoContent) on successful delete, archive, or record not found.\n\nError status codes: 401(Unauthorized)-User not logged in.\n\n403(Forbidden)-If authenticated user is not certified or on track.\n\n409(Conflict)-ClientRecord cannot be deleted due to it having associated data and autoArchive param = false.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ClientRecord.Id value",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "autoArchive",
+            "in": "query",
+            "description": "Archive the ClientRecord. Determines if shoud automatically archive the record if it cannot be deleted.  Default = true.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "NoContent - ClientRecord deleted or archived successfully, or record not found"
+          },
+          "401": {
+            "description": "Unauthorized-User not logged in"
+          },
+          "403": {
+            "description": "Forbidden-Authenticated user is not certified or on track"
+          },
+          "409": {
+            "description": "Conflict-ClientRecord cannot be deleted due to it having associated data and autoArchive param = false."
+          }
+        }
+      }
+    },
+    "/api/clientrecords/pros/{prouserid}": {
+      "get": {
+        "tags": ["ClientRecord"],
+        "summary": "Gets all ClientRecords based on the Pro's user id",
+        "description": "Gets all ClientRecords based on the Pro's user id.\n\nClientRecordDTO on success (200) or 404(NotFound).\n\nError status codes: 401(Unauthorized)-User not logged in\n\n403(Forbidden)-If authenticated user is not certified or on track.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Pro user id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ClientRecord retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClientRecord"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized-User not logged in"
+          },
+          "403": {
+            "description": "Forbidden-Authenticated user is not certified or on track"
+          }
+        }
+      }
+    },
+    "/api/clientshares": {
+      "post": {
+        "tags": ["ClientShare"],
+        "summary": "Create a Client Share between a Client and a Pro",
+        "description": "Use the ClientShareCreatePayloadDto ClientConnection Id and Id of the Pro who will receive the Client Share, to establish the Client Share between a Client and a Pro",
+        "requestBody": {
+          "description": "Client Share Create Payload, contains the ClientConnectionId and the Receiving Pro Id",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientShareInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Client Share created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientShare"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clientshares/{clientshareid}": {
+      "put": {
+        "tags": ["ClientShare"],
+        "summary": "Approve ClientShare between a Client and a Pro",
+        "description": "Based on the ClientShare id, set the status of the ClientShare object to ClientShareStatus.Approved, between a Client and a Pro",
+        "parameters": [
+          {
+            "name": "clientshareid",
+            "in": "path",
+            "description": "Id of the ClientShare",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client Share approved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientShare"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["ClientShare"],
+        "summary": "Delete ClientShare between a Client and a Pro",
+        "description": "Based on the ClientShare id, delete ClientShare between a Client and a Pro",
+        "parameters": [
+          {
+            "name": "clientshareid",
+            "in": "path",
+            "description": "ClientShare id of the ClientShare to be deleted",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Client Share deleted successfully"
+          }
+        }
+      }
+    },
+    "/api/clientshares/pros/{prouserid_share}": {
+      "get": {
+        "tags": ["ClientShare"],
+        "summary": "Get all ClientShares for a Pro",
+        "description": "Based on the Pro's id, get all ClientShares where the Pro is receiving the ClientShare",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "user id of the Pro who is receiving the ClientShare",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client Share retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClientShare"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clientshares/pros/{prouserid_origin}": {
+      "get": {
+        "tags": ["ClientShare"],
+        "summary": "Get all ClientShares for a Pro",
+        "description": "Based on the Pro's id, get all ClientShares where the Pro is sharing the ClientShare",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Pro's user id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client Share retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClientShare"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/coachclientconnection": {
+      "post": {
+        "tags": ["CoachClientConnection"],
+        "summary": "Create a CoachClientConnection between a Client and a Pro",
+        "description": "Use the AESCoachClientConnectionSavePayload to initiate the CoachClientConnection between a Client and a Pro",
+        "requestBody": {
+          "description": "AESCoachClientConnectionSavePayload containing the ClientRecordId, AthleteId, EmailAddress, and Note",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoachClientConnectionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "CoachClientConnection created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachClientConnection"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/coachclientconnection/pros/{prouserid}": {
+      "get": {
+        "tags": ["CoachClientConnection"],
+        "summary": "Get all CoachClientConnections for a Pro",
+        "description": "Get all CoachClientConnections for a Pro based on the Pro's user id",
+        "parameters": [
+          {
+            "name": "prouserid",
+            "in": "path",
+            "description": "Pro's user id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of all CoachClientConnections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoachClientConnection"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/coachclientconnection/{joincode}": {
+      "put": {
+        "tags": ["CoachClientConnection"],
+        "summary": "Complete a CoachClientConnection",
+        "description": "Complete an existing CoachClientConnection by leveraging the CoachClientConnection joinCode and athlete id",
+        "parameters": [
+          {
+            "name": "joincode",
+            "in": "path",
+            "description": "Join code of the AESCoachClientConnectionCompletePayload object used to complete the CoachClientConnection",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CoachClientConnection completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachClientConnection"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/coachclientconnection/{coachclientconnectionid}": {
+      "put": {
+        "tags": ["CoachClientConnection"],
+        "summary": "Disconnect a CoachClientConnection",
+        "description": "Disconnect an existing CoachClientConnection by leveraging the AESCoachClientConnectionDisconnectPayload CoachClientConnection id",
+        "parameters": [
+          {
+            "name": "CoachClientConnection id",
+            "in": "path",
+            "description": "AESCoachClientConnectionDisconnectPayload CoachClientConnection Id value",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CoachClientConnection disconnected successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachClientConnection"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["CoachClientConnection"],
+        "summary": "Delete a CoachClientConnection",
+        "description": "Delete a CoachClientConnection by its CoachClientConnection id",
+        "parameters": [
+          {
+            "name": "CoachClientConnection id",
+            "in": "path",
+            "description": "CoachClientConnection Id value",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "CoachClientConnection deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachClientConnection"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ClientRecord": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "string",
+            "example": "1"
+          },
+          "FirstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "LastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "Email": {
+            "type": "string",
+            "example": "johndoe@aol.com"
+          },
+          "IsArchived": {
+            "type": "boolean",
+            "example": "false"
+          },
+          "AddDate": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "ModifiedDate": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "Gender": {
+            "type": "integer",
+            "enum": [1, 2],
+            "example": 1
+          },
+          "PhotoFileId": {
+            "type": "integer",
+            "example": 12
+          },
+          "IsRightHandPlayer": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "DOB": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "Height": {
+            "type": "integer",
+            "example": 170
+          },
+          "Weight": {
+            "type": "integer",
+            "example": 200
+          },
+          "HasJoined": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "InviteData": {
+            "type": "object",
+            "properties": {
+              "SentCount": {
+                "type": "integer",
+                "example": "1"
+              },
+              "LastSentDate": {
+                "type": "string",
+                "example": "2021-01-01T00:00:00"
+              },
+              "LastEmailSendStatus": {
+                "type": "integer",
+                "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                "example": 1
+              },
+              "AcceptedDate": {
+                "type": "string",
+                "example": "2021-01-01T00:00:00"
+              }
+            }
+          },
+          "DefaultRoutineDuration": {
+            "type": "integer",
+            "enum": [15, 30, 45, 60, 90],
+            "example": "30"
+          },
+          "proUserId": {
+            "type": "integer",
+            "example": 4
+          }
+        }
+      },
+      "ClientRecordInput": {
+        "type": "object",
+        "properties": {
+          "FirstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "LastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "Email": {
+            "type": "string",
+            "example": "johndoe@aol.com"
+          },
+          "IsArchived": {
+            "type": "boolean",
+            "example": "false"
+          },
+          "AddDate": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "ModifiedDate": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "Gender": {
+            "type": "integer",
+            "enum": [1, 2],
+            "example": 1
+          },
+          "PhotoFileId": {
+            "type": "integer",
+            "example": 12
+          },
+          "IsRightHandPlayer": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "DOB": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "Height": {
+            "type": "integer",
+            "example": 170
+          },
+          "Weight": {
+            "type": "integer",
+            "example": 200
+          },
+          "HasJoined": {
+            "type": "boolean",
+            "example": "true"
+          },
+          "InviteData": {
+            "type": "object",
+            "properties": {
+              "sentCount": {
+                "type": "integer",
+                "example": "1"
+              },
+              "LastSentDate": {
+                "type": "string",
+                "example": "2021-01-01T00:00:00"
+              },
+              "LastEmailSendStatus": {
+                "type": "integer",
+                "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                "example": 1
+              },
+              "AcceptedDate": {
+                "type": "string",
+                "example": "2021-01-01T00:00:00"
+              }
+            }
+          },
+          "DefaultRoutineDuration": {
+            "type": "integer",
+            "enum": [15, 30, 45, 60, 90],
+            "example": "30"
+          },
+          "proUserId": {
+            "type": "integer",
+            "example": 4
+          }
+        }
+      },
+      "ClientShareInput": {
+        "type": "object",
+        "properties": {
+          "ClientConnectionId": {
+            "type": "string",
+            "example": "1"
+          },
+          "ReceivingProId": {
+            "type": "Number",
+            "example": 2
+          }
+        }
+      },
+      "ClientShare": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "example": 1
+          },
+          "AthleteId": {
+            "type": "integer",
+            "example": 1
+          },
+          "ProUserId_Origin": {
+            "type": "integer",
+            "example": 2
+          },
+          "ProUserId_Share": {
+            "type": "integer",
+            "example": 3
+          },
+          "ClientRecordId_Origin": {
+            "type": "integer",
+            "example": 4
+          },
+          "CoachClientConnectionId": {
+            "type": "integer",
+            "example": 5
+          },
+          "CurrentStatus": {
+            "type": "string",
+            "example": "Pending"
+          },
+          "AddDate": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "ModifiedDate": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          }
+        }
+      },
+      "CoachClientConnectionInput": {
+        "type": "object",
+        "properties": {
+          "ClientRecordId": {
+            "type": "integer",
+            "example": 1
+          },
+          "AthleteId": {
+            "type": "integer",
+            "example": 1
+          },
+          "EmailAddress": {
+            "type": "string",
+            "example": "johndoe@aol.com"
+          },
+          "Note": {
+            "type": "string",
+            "example": "This is a note"
+          }
+        }
+      },
+      "CoachClientConnection": {
+        "type": "object",
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "example": 1
+          },
+          "AthleteId": {
+            "type": "integer",
+            "example": 1
+          },
+          "ClientRecordId": {
+            "type": "integer",
+            "example": 1
+          },
+          "ProUserId": {
+            "type": "integer",
+            "example": 2
+          },
+          "JoinCode": {
+            "type": "string",
+            "example": "1234"
+          },
+          "CurrentStatus": {
+            "type": "string",
+            "example": "Pending"
+          },
+          "AddDate": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "ModifiedDate": {
+            "type": "string",
+            "example": "2021-01-01T00:00:00"
+          },
+          "Note": {
+            "type": "string",
+            "example": "This is a note"
+          },
+          "Error": {
+            "type": "string",
+            "example": "This is an error"
+          }
+        }
+      },
+      "CoachClientSaveInput": {
+        "type": "object",
+        "properties": {
+          "JoinCode": {
+            "type": "string",
+            "example": "1234"
+          }
+        }
+      },
+      "CoachCLientConnectionDisconnectInput": {
+        "type": "object",
+        "properties": {
+          "CoachClientConnectionId": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      }
+    }
+  }
+}
